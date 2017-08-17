@@ -4,8 +4,9 @@ ML learning repository
 
 ---
 
-**core.image_model**: Image processing based on Pillow and numpy
-**core.learning_model**: ML system
+* **core.image_model**: Image processing based on Pillow and numpy
+
+* **core.learning_model**: ML system
 
 ---
 

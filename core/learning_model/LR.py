@@ -1,4 +1,3 @@
-__author__='Qubic'
 import numpy as np
 
 class LR(object):
