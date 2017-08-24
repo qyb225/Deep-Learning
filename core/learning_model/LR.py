@@ -12,15 +12,25 @@ class LR(object):
     def standardize_data(self, X):
         return self.standardize(X)
 
-    def sigmoid(self, z):
-        ans = 1 / (1 + np.exp(-1 * z))
-        return ans
-
     def init_params(self, dim_w):
         b = 0
         w = np.zeros((dim_w, 1))
 
         return w, b
+
+    # function
+    def sigmoid(self, z):
+        ans = 1 / (1 + np.exp(-1 * z))
+        return ans
+
+    def cost_function(self, y_hat):
+        m = self.train_set_x.shape[1]
+
+        logprobs = np.multiply(np.log(y_hat), self.train_set_y) \
+                   + np.multiply(np.log(1 - y_hat), 1 - self.train_set_y)
+
+        cost = -1 / m * np.sum(logprobs)
+        return cost
 
     # training
     def propagate(self):
@@ -29,7 +39,7 @@ class LR(object):
         b = self.params['b']
 
         y_hat = self.sigmoid(np.dot(w.T, self.train_set_x) + b)
-        cost = -1 / m * (self.train_set_y * np.log(y_hat) + (1 - self.train_set_y) * np.log(1 - y_hat)).sum()
+        cost = self.cost_function(y_hat)
 
         dw = 1 / m * np.dot(self.train_set_x, (y_hat - self.train_set_y).T)
         db = 1 / m * (y_hat - self.train_set_y).sum()
