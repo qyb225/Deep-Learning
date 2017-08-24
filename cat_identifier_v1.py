@@ -1,6 +1,6 @@
 import numpy as np
 from PIL import Image
-from core.learning_model import LR
+from core.learning_model import LR, NeuralNetwork
 from core.image_model import image_processing
 
 # 1. Data
@@ -42,9 +42,17 @@ def load_images_data():
 
 def run():
     train_set_x, train_set_y, test_set_x, test_set_y = load_images_data()
-    lr = LR.LR(train_set_x, train_set_y, lambda x : x / 255)
-    lr.train_model_run()
-    lr.predict_model_run(train_set_x, train_set_y)
-    lr.predict_model_run(test_set_x, test_set_y)
+
+    # print ("LR Run...")
+    # lr = LR.LR(train_set_x, train_set_y, lambda x : x / 255)
+    # lr.train_model_run()
+    # lr.predict_model_run(train_set_x, train_set_y)
+    # lr.predict_model_run(test_set_x, test_set_y)
+
+    print ("NN Run")
+    nn = NeuralNetwork.OneHiddenLayerNN(50, train_set_x, train_set_y, lambda x : x / 255)
+    nn.train_model_run(1501, 0.01)
+    nn.predict_model_run(train_set_x, train_set_y)
+    nn.predict_model_run(test_set_x, test_set_y)
 
 run()

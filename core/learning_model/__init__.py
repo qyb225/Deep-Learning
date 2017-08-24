@@ -1,2 +1,2 @@
 __author__='Qubic'
-__all__=["LR"]
+__all__=["LR", "NeuralNetwork"]
