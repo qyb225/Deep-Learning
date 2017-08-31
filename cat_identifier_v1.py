@@ -49,10 +49,16 @@ def run():
     # lr.predict_model_run(train_set_x, train_set_y)
     # lr.predict_model_run(test_set_x, test_set_y)
 
-    print ("NN Run")
-    nn = NeuralNetwork.OneHiddenLayerNN(50, train_set_x, train_set_y, lambda x : x / 255)
-    nn.train_model_run(1501, 0.01)
-    nn.predict_model_run(train_set_x, train_set_y)
-    nn.predict_model_run(test_set_x, test_set_y)
+    # print ("NN1 Run...")
+    # nn = NeuralNetwork.OneHiddenLayerNN(5, train_set_x, train_set_y, lambda x : x / 255)
+    # nn.train_model_run(1501, 0.01)
+    # nn.predict_model_run(train_set_x, train_set_y)
+    # nn.predict_model_run(test_set_x, test_set_y)
+
+    print ("NN2 Run...")
+    nn2 = NeuralNetwork.NN(train_set_x, train_set_y, [25, 18, 15], lambda x : x / 255)
+    nn2.train_model_run(1501, 0.011)
+    nn2.predict_model_run(train_set_x, train_set_y)
+    nn2.predict_model_run(test_set_x, test_set_y)
 
 run()
