@@ -3,9 +3,9 @@ from PIL import Image
 
 def image_to_matrix(image, width = 0, height = 0):
     if width == 0 or height == 0:
-        width = image.size[0]
-        height = image.size[1]
-    img = image.resize((width, height))
+        img = image
+    else:
+        img = image.resize((width, height))
     mat = np.zeros((width * height, 3))
 
     for i in range(width):
@@ -17,3 +17,10 @@ def image_to_matrix(image, width = 0, height = 0):
 def image_to_vector(image, width = 0, height = 0):
     mat = image_to_matrix(image, width, height)
     return mat.reshape((mat.shape[0] * mat.shape[1], 1))
+
+def cut_image(image_addr, image_name, size):
+    print ("loading " + image_addr)
+    image = Image.open(image_addr)
+    img = image.resize(size)
+    img.save(image_name, "JPEG")
+    print (image_name + " saved")

@@ -7,10 +7,10 @@ from core.image_model import image_processing
 def load_images_data():
     train_set_x = None
     test_set_x = None
-    train_set_y = np.zeros((1, 60))
-    test_set_y = np.zeros((1, 29))
+    train_set_y = np.zeros((1, 95))
+    test_set_y = np.zeros((1, 17))
 
-    for i in range(30):
+    for i in range(55):
         print ('loading: cat_' + str(i) + '.jpg...')
         img = Image.open('./images/cat/cat_' + str(i) + '.jpg')
         if i == 0:
@@ -19,21 +19,21 @@ def load_images_data():
             train_set_x = np.column_stack((train_set_x, image_processing.image_to_vector(img, 75, 100)))
         train_set_y[0][i] = 1
 
-    for i in range(30, 40):
+    for i in range(55, 63):
         print ('loading: cat_' + str(i) + '.jpg...')
         img = Image.open('./images/cat/cat_' + str(i) + '.jpg')
-        if i == 30:
+        if i == 55:
             test_set_x = image_processing.image_to_vector(img, 75, 100)
         else:
             test_set_x = np.column_stack((test_set_x, image_processing.image_to_vector(img, 75, 100)))
-        test_set_y[0][i - 30] = 1
+        test_set_y[0][i - 55] = 1
 
-    for i in range(30):
+    for i in range(40):
         print ('loading: other_' + str(i) + '.jpg...')
         img = Image.open('./images/other/' + str(i) + '.jpg')
         train_set_x = np.column_stack((train_set_x, image_processing.image_to_vector(img, 75, 100)))
 
-    for i in range(30, 49):
+    for i in range(40, 49):
         print ('loading: other_' + str(i) + '.jpg...')
         img = Image.open('./images/other/' + str(i) + '.jpg')
         test_set_x = np.column_stack((test_set_x, image_processing.image_to_vector(img, 75, 100)))
