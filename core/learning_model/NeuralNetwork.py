@@ -75,7 +75,7 @@ class NN(object):
 
         return Z
 
-    def _linear_activation_forward(self, A_prev, W, b, activation):
+    def _linear_activation_forward(self, A_prev, W, b, activation, keep_prop):
         Z = self._liner_forward(A_prev, W, b)
         A = None
         if activation == "sigmoid":
@@ -84,23 +84,29 @@ class NN(object):
             A = relu(Z)
         elif activation == "tanh":
             A = tanh(Z)
-        return A, Z
+        D = np.random.rand(A.shape[0], A.shape[1]) < keep_prop
+        A = np.multiply(A, D)
+        A /= keep_prop
+        return A, Z, D
 
-    def _forward_propagation(self, X):
+    def _forward_propagation(self, X, keep_prop = 1):
         A = X
         caches = []
         L = len(self._params)
         for i in range(L - 1):
-            A, Z = self._linear_activation_forward(A, self._params[i]['W'], self._params[i]['b'], self._activation_fn)
+            A, Z, D = self._linear_activation_forward(A, self._params[i]['W'], self._params[i]['b'], self._activation_fn, keep_prop)
             caches.append({
                 'A': A,
-                'Z': Z
+                'Z': Z,
+                'D': D
             })
 
-        AL, Z = self._linear_activation_forward(A, self._params[L - 1]['W'], self._params[L - 1]['b'], "sigmoid")
+        #Final layer keep_prop must be 1.
+        AL, ZL, DL = self._linear_activation_forward(A, self._params[L - 1]['W'], self._params[L - 1]['b'], "sigmoid", 1)
         caches.append({
             'A': AL,
-            'Z': Z
+            'Z': ZL,
+            'D': DL
         })
         return  AL, caches
 
@@ -112,7 +118,9 @@ class NN(object):
 
         return dA_prev, dW, db
 
-    def _linear_activation_backward(self, dA, A_prev, Z, W, b, activation):
+    def _linear_activation_backward(self, dA, A_prev, Z, D, W, b, activation, keep_prop):
+        dA = np.multiply(dA, D)
+        dA /= keep_prop
         dZ = None
         if activation == "relu":
             dZ = dA * relu_prime(Z)
@@ -124,16 +132,17 @@ class NN(object):
         dA_prev, dW, db =  self._liner_backward(dZ, A_prev, W, b)
         return dA_prev, dW, db
 
-    def _backward_propagation(self, AL, caches):
+    def _backward_propagation(self, AL, caches, keep_prop):
         grads = []
         dAL = -1 * self._train_set_y / AL + (1 - self._train_set_y) / (1 - AL)
         L = len(caches)
 
         Z = caches[L - 1]['Z']
+        D = caches[L - 1]['D']
         A_prev = caches[L - 2]['A']
         W = self._params[L - 1]['W']
         b = self._params[L - 1]['b']
-        dA_prev, dW, db = self._linear_activation_backward(dAL, A_prev, Z, W, b, "sigmoid")
+        dA_prev, dW, db = self._linear_activation_backward(dAL, A_prev, Z, D, W, b, "sigmoid", 1)
         grads.insert(0, {
             'dW': dW,
             'db': db
@@ -141,20 +150,22 @@ class NN(object):
 
         for i in reversed(range(1, L - 1)):
             Z = caches[i]['Z']
+            D = caches[i]['D']
             A_prev = caches[i - 1]['A']
             W = self._params[i]['W']
             b = self._params[i]['b']
-            dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, W, b, self._activation_fn)
+            dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, D, W, b, self._activation_fn, keep_prop)
             grads.insert(0, {
                 'dW': dW,
                 'db': db
             })
 
         Z = caches[0]['Z']
+        D = caches[0]['D']
         A_prev = self._train_set_x
         W = self._params[0]['W']
         b = self._params[0]['b']
-        dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, W, b, self._activation_fn)
+        dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, D, W, b, self._activation_fn, keep_prop)
         grads.insert(0, {
             'dW': dW,
             'db': db
@@ -170,17 +181,15 @@ class NN(object):
             self._params[i]['b'] -= learning_rate * grads[i]['db']
         return
 
-    def _training_iterate(self, num_iterations, learning_rate, cost_val):
+    def _training_iterate(self, num_iterations, learning_rate, keep_prop):
         for i in range(0, num_iterations):
-            Y_hat, caches = self._forward_propagation(self._train_set_x)
+            Y_hat, caches = self._forward_propagation(self._train_set_x, keep_prop)
             cost = self._cost_function(Y_hat)
-            grads = self._backward_propagation(Y_hat, caches)
+            grads = self._backward_propagation(Y_hat, caches, keep_prop)
             self._update_params(grads, learning_rate)
 
             if i % 100 == 0:
                 print("Cost after iteration %i: %f" % (i, cost))
-            if cost < cost_val:
-                break
 
         return cost
 
@@ -190,8 +199,8 @@ class NN(object):
         return Y_prediction
 
     # API
-    def train_model_run(self, num_iterations = 1001, learning_rate = 0.01, cost_val = 0):
-        self._training_iterate(num_iterations, learning_rate, cost_val)
+    def train_model_run(self, num_iterations = 1001, learning_rate = 0.01, keep_prop = 0.8):
+        self._training_iterate(num_iterations, learning_rate, keep_prop)
 
     def predict_model_run(self, data_x, data_y):
         X = self._standardize_data(data_x)
