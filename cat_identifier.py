@@ -43,21 +43,12 @@ def load_images_data():
 def run():
     train_set_x, train_set_y, test_set_x, test_set_y = load_images_data()
 
-    # print ("LR Run...")
-    # lr = LR.LR(train_set_x, train_set_y, lambda x : x / 255)
-    # lr.train_model_run()
-    # lr.predict_model_run(train_set_x, train_set_y)
-    # lr.predict_model_run(test_set_x, test_set_y)
-
-    # print ("NN1 Run...")
-    # nn = NeuralNetwork.OneHiddenLayerNN(5, train_set_x, train_set_y, lambda x : x / 255)
-    # nn.train_model_run(1501, 0.01)
-    # nn.predict_model_run(train_set_x, train_set_y)
-    # nn.predict_model_run(test_set_x, test_set_y)
-
     print ("NN2 Run...")
     nn2 = NeuralNetwork.NN(train_set_x, train_set_y, [25, 10, 7], lambda x : x / 255)
-    nn2.train_model_run(3001, 0.01, 0.85)
+    #API:
+    #nn.train_model_run(num_iterations = 1001, learning_rate = 0.01, keep_prop = 0.8, lambd = 0.7)
+
+    nn2.train_model_run(3001, 0.01, 0.85, 0.9)
     nn2.predict_model_run(train_set_x, train_set_y)
     nn2.predict_model_run(test_set_x, test_set_y)
 

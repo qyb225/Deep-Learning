@@ -60,13 +60,20 @@ class NN(object):
         return params
 
     # function
-    def _cost_function(self, y_hat):
+    def _cost_function(self, y_hat, lambd):
         m = self._train_set_x.shape[1]
 
         logprobs = np.multiply(np.log(y_hat), self._train_set_y) \
                    + np.multiply(np.log(1 - y_hat), 1 - self._train_set_y)
 
         cost = -1 / m * np.sum(logprobs)
+
+        #Regularzation
+        reg = 0
+        for i in range(len(self._params)):
+            reg += np.sum(np.multiply(self._params[i]['W'], self._params[i]['W']))
+        cost += lambd / (2 * m) * reg
+
         return cost
 
     #training
@@ -118,7 +125,7 @@ class NN(object):
 
         return dA_prev, dW, db
 
-    def _linear_activation_backward(self, dA, A_prev, Z, D, W, b, activation, keep_prop):
+    def _linear_activation_backward(self, dA, A_prev, Z, D, W, b, activation, keep_prop, lambd):
         dA = np.multiply(dA, D)
         dA /= keep_prop
         dZ = None
@@ -130,9 +137,12 @@ class NN(object):
             dZ = dA * sigmoid_prime(Z)
 
         dA_prev, dW, db =  self._liner_backward(dZ, A_prev, W, b)
+        m = self._train_set_x.shape[1]
+        dW += lambd / m * W
+
         return dA_prev, dW, db
 
-    def _backward_propagation(self, AL, caches, keep_prop):
+    def _backward_propagation(self, AL, caches, keep_prop, lambd):
         grads = []
         dAL = -1 * self._train_set_y / AL + (1 - self._train_set_y) / (1 - AL)
         L = len(caches)
@@ -142,7 +152,7 @@ class NN(object):
         A_prev = caches[L - 2]['A']
         W = self._params[L - 1]['W']
         b = self._params[L - 1]['b']
-        dA_prev, dW, db = self._linear_activation_backward(dAL, A_prev, Z, D, W, b, "sigmoid", 1)
+        dA_prev, dW, db = self._linear_activation_backward(dAL, A_prev, Z, D, W, b, "sigmoid", 1, lambd)
         grads.insert(0, {
             'dW': dW,
             'db': db
@@ -154,7 +164,7 @@ class NN(object):
             A_prev = caches[i - 1]['A']
             W = self._params[i]['W']
             b = self._params[i]['b']
-            dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, D, W, b, self._activation_fn, keep_prop)
+            dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, D, W, b, self._activation_fn, keep_prop, lambd)
             grads.insert(0, {
                 'dW': dW,
                 'db': db
@@ -165,7 +175,7 @@ class NN(object):
         A_prev = self._train_set_x
         W = self._params[0]['W']
         b = self._params[0]['b']
-        dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, D, W, b, self._activation_fn, keep_prop)
+        dA_prev, dW, db = self._linear_activation_backward(dA_prev, A_prev, Z, D, W, b, self._activation_fn, keep_prop, lambd)
         grads.insert(0, {
             'dW': dW,
             'db': db
@@ -181,11 +191,11 @@ class NN(object):
             self._params[i]['b'] -= learning_rate * grads[i]['db']
         return
 
-    def _training_iterate(self, num_iterations, learning_rate, keep_prop):
+    def _training_iterate(self, num_iterations, learning_rate, keep_prop, lambd):
         for i in range(0, num_iterations):
             Y_hat, caches = self._forward_propagation(self._train_set_x, keep_prop)
-            cost = self._cost_function(Y_hat)
-            grads = self._backward_propagation(Y_hat, caches, keep_prop)
+            cost = self._cost_function(Y_hat, lambd)
+            grads = self._backward_propagation(Y_hat, caches, keep_prop, lambd)
             self._update_params(grads, learning_rate)
 
             if i % 100 == 0:
@@ -199,128 +209,8 @@ class NN(object):
         return Y_prediction
 
     # API
-    def train_model_run(self, num_iterations = 1001, learning_rate = 0.01, keep_prop = 0.8):
-        self._training_iterate(num_iterations, learning_rate, keep_prop)
-
-    def predict_model_run(self, data_x, data_y):
-        X = self._standardize_data(data_x)
-        Y_prediction = self._predict(X)
-        print ("Accuracy: {} %".format(100 - np.mean(np.abs(Y_prediction - data_y)) * 100))
-
-        return Y_prediction
-
-
-# One Hidden Layer Neural Netowrk
-class OneHiddenLayerNN(object):
-    #init
-    def __init__(self, n_hidden, train_set_x, train_set_y, standardize):
-        self._standardize = standardize
-        self._train_set_x = self._standardize_data(train_set_x)
-        self._train_set_y = train_set_y
-        n_x, n_h, n_y = self._layer_sizes(n_hidden)
-        self._params = self._init_params(n_x, n_h, n_y)
-
-    def _standardize_data(self, X):
-        return self._standardize(X)
-
-    def _layer_sizes(self, n_hidden):
-        n_x = self._train_set_x.shape[0]
-        n_h = n_hidden
-        n_y = self._train_set_y.shape[0]
-
-        return n_x, n_h, n_y
-
-    def _init_params(self, n_x, n_h, n_y):
-        W1 = np.random.randn(n_h, n_x) * 0.01
-        b1 = np.zeros((n_h, 1))
-        W2 = np.random.randn(n_y, n_h) * 0.01
-        b2 = np.zeros((n_y, 1))
-
-        params = {
-            'W1': W1,
-            'b1': b1,
-            'W2': W2,
-            'b2': b2
-        }
-        return params
-
-    # function
-    def _cost_function(self, y_hat):
-        m = self._train_set_x.shape[1]
-
-        logprobs = np.multiply(np.log(y_hat), self._train_set_y) \
-                   + np.multiply(np.log(1 - y_hat), 1 - self._train_set_y)
-
-        cost = -1 / m * np.sum(logprobs)
-        return cost
-
-    #training
-    def _forward_propagation(self, X):
-        W1 = self._params['W1']
-        b1 = self._params['b1']
-        W2 = self._params['W2']
-        b2 = self._params['b2']
-
-        Z1 = np.dot(W1, X) + b1
-        A1 = tanh(Z1)
-        Z2 = np.dot(W2, A1) + b2
-        A2 = sigmoid(Z2)
-
-        cache = {"Z1": Z1,
-                 "A1": A1,
-                 "Z2": Z2,
-                 "A2": A2}
-
-        return cache
-
-    def _backward_propagation(self, cache):
-        m = self._train_set_x.shape[1]
-        A1 = cache['A1']
-        A2 = cache['A2']
-
-        W1 = self._params['W1']
-        W2 = self._params['W2']
-
-        dZ2 = A2 - self._train_set_y
-        dW2 = 1 / m * np.dot(dZ2, A1.T)
-        db2 = 1 / m * np.sum(dZ2, axis = 1, keepdims = True)
-        dZ1 = np.dot(W2.T, dZ2) * (1 - np.power(A1, 2))
-        dW1 = 1 / m * np.dot(dZ1, self._train_set_x.T)
-        db1 = 1 / m * np.sum(dZ1, axis = 1, keepdims = True)
-
-        grads = {'dW1': dW1,
-                 'db1': db1,
-                 'dW2': dW2,
-                 'db2': db2}
-        return grads
-
-    def _update_params(self, grads, learning_rate):
-        self._params['W1'] -= learning_rate * grads['dW1']
-        self._params['b1'] -= learning_rate * grads['db1']
-        self._params['W2'] -= learning_rate * grads['dW2']
-        self._params['b2'] -= learning_rate * grads['db2']
-
-    def _training_iterate(self, num_iterations, learning_rate):
-        for i in range(0, num_iterations):
-            cache = self._forward_propagation(self._train_set_x)
-            cost = self._cost_function(cache['A2'])
-            grads = self._backward_propagation(cache)
-
-            self._update_params(grads, learning_rate)
-
-            if i % 100 == 0:
-                print("Cost after iteration %i: %f" % (i, cost))
-
-        return cost
-    
-    def _predict(self, X):
-        y_hat = self._forward_propagation(X)['A2']
-        Y_prediction = y_hat > 0.5
-        return Y_prediction
-
-    # API
-    def train_model_run(self, num_iterations = 1001, learning_rate = 0.01):
-        self._training_iterate(num_iterations, learning_rate)
+    def train_model_run(self, num_iterations = 1001, learning_rate = 0.01, keep_prop = 0.8, lambd = 0.7):
+        self._training_iterate(num_iterations, learning_rate, keep_prop, lambd)
 
     def predict_model_run(self, data_x, data_y):
         X = self._standardize_data(data_x)
