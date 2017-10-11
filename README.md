@@ -22,6 +22,12 @@ ML learning repository
             <li>激活函数支持 relu 和 tanh</li>
         </ul>
     </li>
+    <li>神经网络正则化解决过拟合问题
+        <ul>
+            <li>L2 正则化</li>
+            <li>Dropout 方法</li>
+        </ul>
+    </li>
 </ol>
 
 ---
@@ -29,13 +35,7 @@ ML learning repository
 ## Todo
 
 <ol>
-    <li>神经网络正则化解决过拟合问题
-        <ul>
-            <li>L2 正则化</li>
-            <li>Dropout 方法</li>
-        </ul>
-    </li>
-    <li><strong>cat_identifier.py</strong>: 猫图片分类器（目前效果并不理想）</li>
+    <li><strong>cat_identifier.py</strong>: 猫图片分类器（目前效果并不理想，需要学完数图使用卷积神经网络）</li>
 </ol>
 
 ---
